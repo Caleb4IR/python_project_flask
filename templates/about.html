@@ -1,0 +1,26 @@
+{% extends 'base.html' %} {% block body %}
+    
+
+    {% for user in users %}
+    <div>
+        <img src="{{ user['pic'] }}" alt="profile pic" />
+        <h1>
+            <!-- {% if user['pro'] %}
+            <span>
+                Hello, <span class="user_name">{{ user['name'] }}</span> 🌍🌍
+            </span>
+            {% else %}
+            <span>
+                Hello, <span class="user_name">{{ user['name'] }}</span> 🗺️🗺️
+            </span>
+            {% endif %} -->
+ 
+            <!-- Hello, <span class="user_name">{{ user['name'] }}</span> {% if user['pro'] %}🌍🌍{% else %}🗺️🗺️{% endif %} -->
+
+            Hello,
+            <span class="user-name">{{user.name}} {{ "🚀" if user.pro else "🎊🎊" }}</span>
+ 
+        </h1>
+    </div> 
+    {% endfor %} 
+    {% endblock %} 

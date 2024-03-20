@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <h1>{{name}}</h1>
+    <h1>Hobbies</h1>
+    <ul>
+        {% for hobby in hobbies %}
+        <li>{{hobby}}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
