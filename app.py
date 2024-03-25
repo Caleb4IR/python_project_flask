@@ -139,13 +139,24 @@ def profile():
 
 @app.route("/movie-list")
 def movie_list_page():
-    return render_template("movie-list.html", movie=movies)
+    return render_template("movie-list.html", movies=movies)
 
 
 # GET --> /movies --> JSON
 @app.get("/movies")
 def get_movies():
     return jsonify(movies)
+
+
+# Task
+# Goto -> http://127.0.0.1:5000/movie-list/100 -> Detail of that particular movie alone
+@app.route("/movie-list/<movie_id>")
+def movie_detail_page(movie_id):
+    movie = next((movie for movie in movies if movie["id"] == movie_id), None)
+    if movie:
+        return render_template("movie-detail.html", movie=movie)
+    else:
+        return "Movie not found", 404
 
 
 # Task 1

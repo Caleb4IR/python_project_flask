@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+
     <style>
         body{
             font-family: sans-serif;
         }
-        .movie-container{
+        .movie-detail-container{
             /* background: pink; */
-            width: 300px;
+            max-width: 600px;
         }
         .movie-spec{
             display: flex;
@@ -36,21 +37,26 @@
     </style>
 </head>
 <body>
-    <div class="movie-list-container">
-        {% for movie in movies %}
+    <iframe
+    width="100%"
+    height="720"
+    src="{{movie.trailer}}"
+    title="Godzilla x Kong : The New Empire | New Final Trailer"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+  ></iframe>
+    <div class="movie-detail-container">
         <div class="movie-container">
-            <img class="movie-poster" 
+            <!-- <img class="movie-poster" 
             src="{{movie.poster}}" 
-            alt="{{movie.name}}">
+            alt="{{movie.name}}"> -->
             <div class="movie-spec">
                 <h2 class="movie-name">{{movie.name}}</h2>
                 <p>⭐ 8.4</p>
             </div>
             <p>{{movie.summary}}</p>
         </div>
-        {% endfor %}
-    </div>
-    
-    
+    </div>    
 </body>
 </html>
