@@ -150,14 +150,64 @@ def get_movies():
 
 # Task
 # Goto -> http://127.0.0.1:5000/movie-list/100 -> Detail of that particular movie alone
-@app.route("/movie-list/<movie_id>")
-def movie_detail_page(movie_id):
-    movie = next((movie for movie in movies if movie["id"] == movie_id), None)
+@app.route("/movie-list/<id>")
+def movie_detail_page(id):
+    movie = next((movie for movie in movies if movie["id"] == id), None)
     if movie:
         return render_template("movie-detail.html", movie=movie)
     else:
         return "Movie not found", 404
 
+
+@app.route("/login", methods=["GET"])
+def login_page():
+    return render_template("forms.html")
+
+
+@app.route("/dashboard", methods=["POST"])
+def dashboard_page():
+    username = request.form.get("username")
+    password = request.form.get("password")
+    print("Dashboard page", username, password)
+    return f"<h1>Hi {username}</h1>"
+
+
+# Task - /movies/add -> Add movie form (5 fields) -> Submit -> /movies-list
+@app.route("/movies/add", methods=["GET"])
+def add_movie_form():
+    return render_template("add_movie.html")
+
+
+@app.route("/movies/add", methods=["POST"])
+def add_movie():
+    movie_ids = [int(movie["id"]) for movie in movies]
+    max_id = max(movie_ids)
+    next_id = str(max_id + 1)
+
+    # Get movie details from the form
+    title = request.form["title"]
+    poster = request.form["poster"]
+    summary = request.form["summary"]
+    rating = request.form["rating"]
+    trailer = request.form["trailer"]
+
+    # Create a new movie dictionary
+    new_movie = {
+        "id": next_id,
+        "name": title,
+        "poster": poster,
+        "summary": summary,
+        "rating": rating,
+        "trailer": trailer,
+    }
+
+    # Append the new movie to the movies list
+    movies.append(new_movie)
+
+    return jsonify({"success": True})
+
+
+# Task - Welcome message
 
 # Task 1
 # <variable name> | id --> keyword argument

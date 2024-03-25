@@ -33,6 +33,10 @@
             justify-content: space-around;
             gap: 24px;
         }
+        .movie-actions{
+            display: flex;
+            justify-content: space-between;
+        }
     </style>
 </head>
 <body>
@@ -44,9 +48,14 @@
             alt="{{movie.name}}">
             <div class="movie-spec">
                 <h2 class="movie-name">{{movie.name}}</h2>
-                <p>⭐ 8.4</p>
+                <p>⭐ {{movie.rating}}</p>
             </div>
             <p>{{movie.summary}}</p>
+            <div class="movie-actions">
+                <a href="/movie-list/{{movie.id}}"> View More ...</a>
+                <a href="/movie-list/{{movie.id}}"> ❌ Delete</a>
+            </div>
+            
         </div>
         {% endfor %}
     </div>

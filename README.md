@@ -52,3 +52,14 @@ For development
 flask run --debug
 ```
 
+## Take snapshot of packages
+
+```sh
+pip freeze > requirements.txt
+```
+
+## Install all dependencies 
+
+```sh
+pip install -r requirements.txt
+```
