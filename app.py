@@ -121,33 +121,6 @@ users = [
     },
 ]
 
-movies = [
-    {
-        "pic": "",
-        "title": "Love Today",
-        "rating": 9.1,
-        "synopsis": "Love Today is an Indian Tamil-language romantic comedy-drama film written and directed by Pradeep Ranganathan of Comali fame, and produced by Kalapathi S.Aghoram under the banner of AGS Entertainment. The film stars Pradeep Ranganathan himself, Ivana and Raveena Ravi in lead roles.",
-    },
-    {
-        "pic": "",
-        "title": "Beast",
-        "rating": 9.1,
-        "synopsis": "Love Today is an Indian Tamil-language romantic comedy-drama film written and directed by Pradeep Ranganathan of Comali fame, and produced by Kalapathi S.Aghoram under the banner of AGS Entertainment. The film stars Pradeep Ranganathan himself, Ivana and Raveena Ravi in lead roles.",
-    },
-    {
-        "pic": "",
-        "title": "PS1",
-        "rating": 9.1,
-        "synopsis": "Love Today is an Indian Tamil-language romantic comedy-drama film written and directed by Pradeep Ranganathan of Comali fame, and produced by Kalapathi S.Aghoram under the banner of AGS Entertainment. The film stars Pradeep Ranganathan himself, Ivana and Raveena Ravi in lead roles.",
-    },
-    {
-        "pic": "",
-        "title": "Sardar",
-        "rating": 9.1,
-        "synopsis": "Love Today is an Indian Tamil-language romantic comedy-drama film written and directed by Pradeep Ranganathan of Comali fame, and produced by Kalapathi S.Aghoram under the banner of AGS Entertainment. The film stars Pradeep Ranganathan himself, Ivana and Raveena Ravi in lead roles.",
-    },
-]
-
 
 @app.route("/")
 def hello_world():
@@ -162,6 +135,11 @@ def about():
 @app.route("/profile")
 def profile():
     return render_template("profile.html", name=name, hobbies=hobbies)
+
+
+@app.route("/movie-list")
+def movie_list_page():
+    return render_template("movie-list.html", movie=movies)
 
 
 # GET --> /movies --> JSON
