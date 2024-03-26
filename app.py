@@ -12,7 +12,6 @@ app = Flask(__name__)
 connection_string = os.environ.get("AZURE_DATABASE_URL")
 app.config["SQLALCHEMY_DATABASE_URI"] = connection_string
 
-# Driver={ODBC Driver 18 for SQL Server};Server=tcp:calebpotts.database.windows.net,1433;Database=moviesdb;Uid=calebpotts;Pwd={your_password_here};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;
 # mssql+pyodbc://<username>:<password>@<dsn_name>?driver=<driver_name>
 
 db = SQLAlchemy(app)
