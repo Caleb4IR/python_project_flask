@@ -1,6 +1,29 @@
+import os
 from flask import Flask, jsonify, request, render_template
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import text
+from dotenv import load_dotenv
+from pprint import pprint
+
+load_dotenv()
+pprint(os.environ.get("AZURE_DATABASE_URL"))
 
 app = Flask(__name__)
+connection_string = os.environ.get("AZURE_DATABASE_URL")
+app.config["SQLALCHEMY_DATABASE_URI"] = connection_string
+
+# Driver={ODBC Driver 18 for SQL Server};Server=tcp:calebpotts.database.windows.net,1433;Database=moviesdb;Uid=calebpotts;Pwd={your_password_here};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;
+# mssql+pyodbc://<username>:<password>@<dsn_name>?driver=<driver_name>
+
+db = SQLAlchemy(app)
+
+try:
+    with app.app_context():
+        # Use text() to explicitly declare your SQL command
+        result = db.session.execute(text("SELECT 1")).fetchall()
+        print("Connection successful:", result)
+except Exception as e:
+    print("Error connecting to the database:", e)
 
 movies = [
     {
@@ -121,6 +144,84 @@ users = [
     },
 ]
 
+# Model (SQLAlchemy) == Schema
+
+# CREATE TABLE movies (
+#     id VARCHAR(50) PRIMARY KEY,
+#     name VARCHAR(100),
+#     poster VARCHAR(255),
+# 	rating FLOAT,
+#     summary VARCHAR(500),
+#     trailer VARCHAR(255)
+# );
+
+
+class Movie(db.Model):
+    __tablename__ = "movies"
+    id = db.Column(db.String(50), primary_key=True)
+    name = db.Column(db.String(100))
+    poster = db.Column(db.String(255))
+    rating = db.Column(db.Float)
+    summary = db.Column(db.String(500))
+    trailer = db.Column(db.String(255))
+
+    # JSON Keys
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "poster": self.poster,
+            "rating": self.rating,
+            "summary": self.summary,
+            "trailer": self.trailer,
+        }
+
+
+# GET --> /movies --> JSON
+@app.get("/movies")
+def get_movies():
+    movie_list = Movie.query.all()  # SELECT * FROM movies | movie_list iterator
+    data = [movie.to_dict() for movie in movie_list]  # to list of dictionaries
+    return jsonify(data)
+
+
+# Task 1
+# .all() -.get()
+@app.get("/movies/<id>")
+def get_movies_by_id(id):
+    movie = Movie.query.get(id)
+    if movie:
+        return jsonify(movie.to_dict())
+    else:
+        return jsonify({"message": "Movie not found"}), 404
+
+
+# Task 2 display the data on the page
+@app.route("/movie-list")
+def movie_list_page():
+    movie = Movie.query.all()
+    return render_template("movie-list.html", movies=movie)
+
+
+# Task 3 display the data on the page from Azure
+@app.route("/movie-list/<id>")
+def movie_detail_page(id):
+    movie = Movie.query.get(id)
+    if movie:
+        return render_template("movie-detail.html", movie=movie)
+    else:
+        return "Movie not found", 404
+
+
+@app.delete("/movies/<id>")
+def delete_movies(id):
+    deleted_movie = next((movie for movie in movies if movie["id"] == id), None)
+    if deleted_movie:
+        movies.remove(deleted_movie)
+        return jsonify({"message": "Movie deleted sucessfully", "data": deleted_movie})
+    else:
+        return jsonify({"message": "Movie not found"}), 404
+
 
 @app.route("/")
 def hello_world():
@@ -137,26 +238,8 @@ def profile():
     return render_template("profile.html", name=name, hobbies=hobbies)
 
 
-@app.route("/movie-list")
-def movie_list_page():
-    return render_template("movie-list.html", movies=movies)
-
-
-# GET --> /movies --> JSON
-@app.get("/movies")
-def get_movies():
-    return jsonify(movies)
-
-
 # Task
 # Goto -> http://127.0.0.1:5000/movie-list/100 -> Detail of that particular movie alone
-@app.route("/movie-list/<id>")
-def movie_detail_page(id):
-    movie = next((movie for movie in movies if movie["id"] == id), None)
-    if movie:
-        return render_template("movie-detail.html", movie=movie)
-    else:
-        return "Movie not found", 404
 
 
 @app.route("/login", methods=["GET"])
@@ -238,15 +321,6 @@ def add_movie():
 # message - movie not found | status_code - 404
 
 
-@app.get("/movies/<id>")
-def get_movies_by_id(id):
-    filtered_movie = next((movie for movie in movies if movie["id"] == id), None)
-    if filtered_movie:
-        return jsonify(filtered_movie)
-    else:
-        return jsonify({"message": "Movie not found"}), 404
-
-
 # Task - 2
 # Create Delete API for movies
 # @app.delete("/movies/<id>")
@@ -267,14 +341,14 @@ def get_movies_by_id(id):
 
 # Task - 2.1 Negative scenario
 # Create Delete API for movies
-@app.delete("/movies/<id>")
-def delete_movies(id):
-    deleted_movie = next((movie for movie in movies if movie["id"] == id), None)
-    if deleted_movie:
-        movies.remove(deleted_movie)
-        return jsonify({"message": "Movie deleted sucessfully", "data": deleted_movie})
-    else:
-        return jsonify({"message": "Movie not found"}), 404
+# @app.delete("/movies/<id>")
+# def delete_movies(id):
+#     deleted_movie = next((movie for movie in movies if movie["id"] == id), None)
+#     if deleted_movie:
+#         movies.remove(deleted_movie)
+#         return jsonify({"message": "Movie deleted sucessfully", "data": deleted_movie})
+#     else:
+#         return jsonify({"message": "Movie not found"}), 404
 
 
 # Task
