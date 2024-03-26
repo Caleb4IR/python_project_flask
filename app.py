@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text
 from dotenv import load_dotenv
 from pprint import pprint
+import uuid
 
 load_dotenv()
 pprint(os.environ.get("AZURE_DATABASE_URL"))
@@ -157,7 +158,7 @@ users = [
 
 class Movie(db.Model):
     __tablename__ = "movies"
-    id = db.Column(db.String(50), primary_key=True)
+    id = db.Column(db.String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(100))
     poster = db.Column(db.String(255))
     rating = db.Column(db.Float)
@@ -212,14 +213,92 @@ def movie_detail_page(id):
         return "Movie not found", 404
 
 
+# Task 4 | db.session.delete(<movie>)
 @app.delete("/movies/<id>")
 def delete_movies(id):
-    deleted_movie = next((movie for movie in movies if movie["id"] == id), None)
-    if deleted_movie:
-        movies.remove(deleted_movie)
-        return jsonify({"message": "Movie deleted sucessfully", "data": deleted_movie})
-    else:
+    deleted_movie = Movie.query.get(id)
+
+    if not deleted_movie:
         return jsonify({"message": "Movie not found"}), 404
+
+    try:
+        db.session.delete(deleted_movie)
+        db.session.commit()  # Make the change permanent
+        return jsonify(
+            {"message": "Movie deleted sucessfully", "data": deleted_movie.to_dict()}
+        )
+    except Exception as e:
+        db.session.rollback()  # Undo the change
+        return jsonify({"message": str(e)}), 500
+
+
+# @app.post("/movies")
+# def post_movies():
+#     data = request.json
+#     new_movie = Movie(
+#         name=data["name"],
+#         poster=data["poster"],
+#         rating=data["rating"],
+#         summary=data["summary"],
+#         trailer=data["trailer"],
+#     )
+
+#     try:
+#         db.session.add(new_movie)
+#         db.session.commit()
+#         movies.append(data)
+#         result = {"message": "Added successfully", "data": new_movie.to_dict()}
+#         return jsonify(result), 201
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({"message": str(e)}), 500
+
+
+@app.post("/movies")
+def post_movies():
+    data = request.json
+    new_movie = Movie(**data)  # Only works when key matches value and id is not givens
+
+    try:
+        db.session.add(new_movie)
+        db.session.commit()
+        movies.append(data)
+        result = {"message": "Added successfully", "data": new_movie.to_dict()}
+        return jsonify(result), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 500
+
+
+# Task: convert to db call
+@app.put("/movies/<id>")
+def update_movie_by_id(id):
+    data = request.json
+
+    movie_to_update = Movie.query.get(id)
+    try:
+        # movie_to_update.name = data.get("name", movie_to_update.name)
+        # movie_to_update.poster = data.get("poster", movie_to_update.poster)
+        # movie_to_update.rating = data.get("rating", movie_to_update.rating)
+        # movie_to_update.summary = data.get("summary", movie_to_update.summary)
+        # movie_to_update.trailer = data.get("trailer", movie_to_update.trailer)
+
+        for key, value in data.items():
+            if hasattr(movie_to_update, key):
+                setattr(movie_to_update, key, value)
+
+        db.session.commit()
+        return jsonify({"message": "Movie updated", "data": movie_to_update.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 500
+
+
+# Task 5 | Delete on the web page
+@app.route("/movie-ist/delete", methods=["POST"])
+def delete_movie_by_id():
+    print(id)
+    return "<p>Movie deleted successfully! 😎</p>"
 
 
 @app.route("/")
@@ -266,14 +345,12 @@ def add_movie():
     max_id = max(movie_ids)
     next_id = str(max_id + 1)
 
-    # Get movie details from the form
     title = request.form["title"]
     poster = request.form["poster"]
     summary = request.form["summary"]
     rating = request.form["rating"]
     trailer = request.form["trailer"]
 
-    # Create a new movie dictionary
     new_movie = {
         "id": next_id,
         "name": title,
@@ -283,10 +360,10 @@ def add_movie():
         "trailer": trailer,
     }
 
-    # Append the new movie to the movies list
-    movies.append(new_movie)
+    db.session.add(new_movie)
+    db.session.commit()
 
-    return jsonify({"success": True})
+    return {"message": "Added successfully", "data": new_movie.to_dict()}
 
 
 # Task - Welcome message
@@ -352,16 +429,16 @@ def add_movie():
 
 # Task
 # Update a movie
-@app.put("/movies/<id>")
-def update_movie_by_id(id):
-    data = request.json
+# @app.put("/movies/<id>")
+# def update_movie_by_id(id):
+#     data = request.json
 
-    movie_to_update = next((movie for movie in movies if movie["id"] == id), None)
-    if movie_to_update:
-        movie_to_update.update(data)
-        return jsonify({"message": "Movie updated", "data": movie_to_update})
-    else:
-        return jsonify({"message": "Movie not updated"}), 404
+#     movie_to_update = next((movie for movie in movies if movie["id"] == id), None)
+#     if movie_to_update:
+#         movie_to_update.update(data)
+#         return jsonify({"message": "Movie updated", "data": movie_to_update})
+#     else:
+#         return jsonify({"message": "Movie not updated"}), 404
 
 
 # @app.put("/movies/<id>")
@@ -379,16 +456,16 @@ def update_movie_by_id(id):
 
 
 # 1 more than the max id
-@app.post("/movies")
-def post_movies():
-    data = request.json
+# @app.post("/movies")
+# def post_movies():
+#     data = request.json
 
-    movie_ids = [int(movie["id"]) for movie in movies]
-    max_id = max(movie_ids)
-    next_id = str(max_id + 1)
+#     movie_ids = [int(movie["id"]) for movie in movies]
+#     max_id = max(movie_ids)
+#     next_id = str(max_id + 1)
 
-    data["id"] = next_id
+#     data["id"] = next_id
 
-    movies.append(data)
-    result = {"message": "Added successfully", "data": data}
-    return jsonify(result), 201
+#     movies.append(data)
+#     result = {"message": "Added successfully", "data": data}
+#     return jsonify(result), 201
