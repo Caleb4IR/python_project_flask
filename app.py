@@ -295,10 +295,21 @@ def update_movie_by_id(id):
 
 
 # Task 5 | Delete on the web page
-@app.route("/movie-ist/delete", methods=["POST"])
+@app.route("/movie-list/delete", methods=["POST"])  # HOF
 def delete_movie_by_id():
-    print(id)
-    return "<p>Movie deleted successfully! 😎</p>"
+    id = request.form.get("movie_id")
+    filtered_movie = Movie.query.get(id)
+    if not filtered_movie:
+        return "<h1>Movie not found</h1>", 404
+
+    try:
+        data = filtered_movie.to_dict()
+        db.session.delete(filtered_movie)
+        db.session.commit()  # Making the change (update/delete/create) permanent
+        return f"<h1>{data['name']} Movie deleted Successfully</h1>"
+    except Exception as e:
+        db.session.rollback()  # Undo the change
+        return f"<h1>Error happened {str(e)}</h1>", 500
 
 
 @app.route("/")
@@ -339,31 +350,80 @@ def add_movie_form():
     return render_template("add_movie.html")
 
 
+# @app.route("/movies/add", methods=["POST"])
+# def add_movie():
+#     movie_ids = [int(movie["id"]) for movie in movies]
+#     max_id = max(movie_ids)
+#     next_id = str(max_id + 1)
+
+#     title = request.form["title"]
+#     poster = request.form["poster"]
+#     summary = request.form["summary"]
+#     rating = request.form["rating"]
+#     trailer = request.form["trailer"]
+
+#     new_movie = {
+#         "id": next_id,
+#         "name": title,
+#         "poster": poster,
+#         "summary": summary,
+#         "rating": rating,
+#         "trailer": trailer,
+#     }
+
+#     db.session.add(new_movie)
+#     db.session.commit()
+
+#     return {"message": "Added successfully", "data": new_movie.to_dict()}
+
+
+# Task - Create to db
 @app.route("/movies/add", methods=["POST"])
 def add_movie():
-    movie_ids = [int(movie["id"]) for movie in movies]
-    max_id = max(movie_ids)
-    next_id = str(max_id + 1)
 
-    title = request.form["title"]
-    poster = request.form["poster"]
-    summary = request.form["summary"]
-    rating = request.form["rating"]
-    trailer = request.form["trailer"]
-
-    new_movie = {
-        "id": next_id,
-        "name": title,
-        "poster": poster,
-        "summary": summary,
-        "rating": rating,
-        "trailer": trailer,
+    movie = {
+        "name": request.form.get("name"),
+        "poster": request.form.get("poster"),
+        "rating": request.form.get("rating"),
+        "summary": request.form.get("summary"),
+        "trailer": request.form.get("trailer"),
     }
+    try:
+        new_movie = Movie(**movie)
+        db.session.add(new_movie)
+        db.session.commit()
+        return f"<h2>{movie['name']} Added Successfully</h2>"
+    except Exception as e:
+        db.session.rollback()
+        return "<h2>Error Occurred</h2>"
 
-    db.session.add(new_movie)
-    db.session.commit()
 
-    return {"message": "Added successfully", "data": new_movie.to_dict()}
+# Task - Update to db
+@app.route("/movies/update", methods=["GET"])
+def update_movie_form():
+    return render_template("update_movie.html")
+
+
+@app.route("/movies/update", methods=["POST"])
+def update_movie():
+    movie_id = request.form.get("movie_id")
+    movie_to_update = Movie.query.get(movie_id)
+
+    if not movie_to_update:
+        return "<h1>Movie not found<h1>"
+
+    try:
+        movie_to_update.name = request.form.get("title")
+        movie_to_update.poster = request.form.get("poster")
+        movie_to_update.rating = request.form.get("rating")
+        movie_to_update.summary = request.form.get("summary")
+        movie_to_update.trailer = request.form.get("trailer")
+
+        db.session.commit()
+        return jsonify({"message": "Movie updated", "data": movie_to_update.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": str(e)}), 500
 
 
 # Task - Welcome message
